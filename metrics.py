@@ -3,6 +3,7 @@ import pandas as pd
 import codecs, difflib, Levenshtein, distance
 import re
 import string
+import pprint
 from collections import Counter
 
 import os.path
@@ -19,8 +20,29 @@ externalList = readCsvAsListOfDictionaries("3rdparty.csv")
 def majorityVoted(d):
     lst = [d["LevName"], d["DiffName"], d["SorName"], d["JacName"]]
     key, value = Counter(lst).most_common(1)[0]
-    print(key)
     return key
+
+def fuzzyVoted(d):
+
+    fieldNames = ["LevName", "DiffName", "SorName", "JacName"]
+    mapping = {"LevName": "LevValue", "DiffName": "DiffValue", "SorName":"SorValue", "JacName":"JacValue"}
+
+
+    subDictionary = {key:d[key] for key in fieldNames}
+    uniqueCounts = dict(Counter(subDictionary.values()).most_common())
+    uniqueScores = {}
+
+    for v in uniqueCounts.keys():
+        for key, value in d.items():
+            if value == v:
+                if uniqueScores.get(v) == None:
+                    uniqueScores[v] = 0
+                uniqueScores[v] += d[mapping[key]]
+    pprint.pprint(uniqueCounts)
+    pprint.pprint(uniqueScores)
+    resultDic = {k: uniqueScores[k] / uniqueCounts[k] for k in uniqueCounts if k in uniqueScores}
+    pprint.pprint(resultDic)
+
 
 
 def writeDicToFile(dic, fileName):
@@ -82,7 +104,8 @@ def evaluateMatches():
 
         summaryDic = dict(zip(('BaseName', 'DiffName', 'DiffValue', 'LevName','LevValue','SorName','SorValue','JacName','JacValue'), (baseName,diffName,diffValue,levName,levValue,sorName, sorValue, jacName, jacValue)))
 
-        print(summaryDic)
+        pprint.pprint(summaryDic)
+        fuzzyVoted(summaryDic)
         summaryDic["MajorityVoted"] = majorityVoted(summaryDic)
         writeDicToFile(summaryDic, "matching_results.csv")
 
