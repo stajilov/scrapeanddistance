@@ -1,7 +1,8 @@
 import csv
 import pandas as pd
 import codecs, difflib, Levenshtein, distance
-import regex
+import re
+import string
 
 def readCsvAsListOfDictionaries(fName):
     df = pd.read_csv(fName, error_bad_lines=False)
@@ -11,8 +12,13 @@ regex = re.compile('[%s]' % re.escape(string.punctuation))
 internalList = readCsvAsListOfDictionaries("institutions_new.csv")
 externalList = readCsvAsListOfDictionaries("3rdparty.csv")
 
+
+def writeDicToFile(dic, fileName):
+    
+
+
 def cleanString(s):
-    return return regex.sub('', s).lower()
+    return regex.sub('', s).lower()
 
 
 def calsulateDistances(st1, st2):
@@ -33,10 +39,39 @@ def evaluateMatches():
         diffValue = 0
         levName = ""
         levValue = 0
-        socName = ""
-        socValue = 0
+        sorName = ""
+        sorValue = 0
         jacName = ""
-        jacValue 0
+        jacValue = 0
 
-        for externalProvider in exteranList:
-            targetName = externalProvider["Name"]
+        for externalProvider in externalList:
+            targetName = externalProvider["NAME"]
+            targetState = externalProvider["STATE"]
+
+            diff, lev, sor, jac = calsulateDistances(cleanString(baseName), cleanString(targetName))
+
+            if diff > diffValue:
+                diffValue = diff
+                diffName = targetName
+            if lev > levValue:
+                levValue = lev
+                levName = targetName
+
+            if sor > sorValue:
+                sorValue = sor
+                sorName = targetName
+
+            if jac > jacValue:
+                jacValue = jac
+                jacName = targetName
+
+
+
+
+
+
+
+
+
+
+evaluateMatches()
