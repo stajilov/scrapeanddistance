@@ -1,5 +1,12 @@
 {
 "internalListPath" : "institutions_new.csv",
 "externalListPath": "3rdparty.csv",
-"outputFileName": "matching_results.csv"
+"outputFileName": "matching_results.csv",
+"internalProviderNameColumn" : "Name",
+"internalProviderStateColumn" : "State",
+"internalProviderIDColumn" : "ID",
+"externalProviderNameColumn" : "NAME",
+"externalProviderStateColumn" : "STATE",
+"externalProviderIDColumn" : "ABA"
+
 }

@@ -79,8 +79,8 @@ def calsulateDistances(st1, st2):
 
 def evaluateMatches():
     for internalProvider in internalList:
-        baseName = internalProvider["Name"]
-        baseState = internalProvider["State"]
+        baseName = internalProvider[settings["internalProviderNameColumn"]]
+        baseState = internalProvider[settings["internalProviderStateColumn"]]
 
         diffName = ""
         diffValue = 0
@@ -92,8 +92,8 @@ def evaluateMatches():
         jacValue = 0
 
         for externalProvider in externalList:
-            targetName = externalProvider["NAME"]
-            targetState = externalProvider["STATE"]
+            targetName = externalProvider[settings["externalProviderNameColumn"]]
+            targetState = externalProvider[settings["externalProviderStateColumn"]]
 
             diff, lev, sor, jac = calsulateDistances(cleanString(baseName), cleanString(targetName))
 
@@ -119,7 +119,6 @@ def evaluateMatches():
         summaryDic["MajorityVoted"] = majorityVoted(summaryDic)
         pprint.pprint(summaryDic)
         writeDicToFile(summaryDic, settings["outputFileName"])
-
 
 
 
