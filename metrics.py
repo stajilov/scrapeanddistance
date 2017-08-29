@@ -41,7 +41,12 @@ def fuzzyVoted(d):
     pprint.pprint(uniqueCounts)
     pprint.pprint(uniqueScores)
     resultDic = {k: uniqueScores[k] / uniqueCounts[k] for k in uniqueCounts if k in uniqueScores}
-    pprint.pprint(resultDic)
+    key, value = Counter(resultDic).most_common(1)[0]
+    #print(key, value)
+
+
+
+    return {"FuzyVotedName" : key, "FuzyVotedScore" : value}
 
 
 
@@ -104,18 +109,10 @@ def evaluateMatches():
 
         summaryDic = dict(zip(('BaseName', 'DiffName', 'DiffValue', 'LevName','LevValue','SorName','SorValue','JacName','JacValue'), (baseName,diffName,diffValue,levName,levValue,sorName, sorValue, jacName, jacValue)))
 
-        pprint.pprint(summaryDic)
-        fuzzyVoted(summaryDic)
+        summaryDic.update(fuzzyVoted(summaryDic))
         summaryDic["MajorityVoted"] = majorityVoted(summaryDic)
+        pprint.pprint(summaryDic)
         writeDicToFile(summaryDic, "matching_results.csv")
-
-
-
-
-
-
-
-
 
 
 
