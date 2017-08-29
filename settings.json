@@ -1,0 +1,5 @@
+{
+"internalListPath" : "institutions_new.csv",
+"externalListPath": "3rdparty.csv",
+"outputFileName": "matching_results.csv"
+}

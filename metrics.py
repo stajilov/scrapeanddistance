@@ -12,9 +12,15 @@ def readCsvAsListOfDictionaries(fName):
     df = pd.read_csv(fName, error_bad_lines=False)
     return df.to_dict('records')
 
+settings = []
+with open('settings.json') as data_file:
+    settings = json.load(data_file)
+
 regex = re.compile('[%s]' % re.escape(string.punctuation))
-internalList = readCsvAsListOfDictionaries("institutions_new.csv")
-externalList = readCsvAsListOfDictionaries("3rdparty.csv")
+
+internalList = readCsvAsListOfDictionaries(settings["internalListPath"])
+externalList = readCsvAsListOfDictionaries(settings["externalListPath"])
+
 
 
 def majorityVoted(d):
@@ -44,8 +50,6 @@ def fuzzyVoted(d):
     key, value = Counter(resultDic).most_common(1)[0]
     #print(key, value)
 
-
-
     return {"FuzyVotedName" : key, "FuzyVotedScore" : value}
 
 
@@ -59,6 +63,7 @@ def writeDicToFile(dic, fileName):
         w.writerow(dic)
 
 
+
 def cleanString(s):
     return regex.sub('', s).lower()
 
@@ -69,6 +74,7 @@ def calsulateDistances(st1, st2):
     sor = 1 - distance.sorensen(st1, st2)
     jac = 1 - distance.jaccard(st1, st2)
     return diffl, lev, sor, jac
+
 
 
 def evaluateMatches():
@@ -112,7 +118,7 @@ def evaluateMatches():
         summaryDic.update(fuzzyVoted(summaryDic))
         summaryDic["MajorityVoted"] = majorityVoted(summaryDic)
         pprint.pprint(summaryDic)
-        writeDicToFile(summaryDic, "matching_results.csv")
+        writeDicToFile(summaryDic, settings["outputFileName"])
 
 
 

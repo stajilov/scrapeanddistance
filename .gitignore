@@ -5,6 +5,7 @@
 !.gitignore
 !metrics.py
 !zip_scrapping.py
+!settings.json
 # etc...
 
 # ...even if they are in subdirectories
