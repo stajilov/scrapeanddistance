@@ -4,25 +4,29 @@ import codecs, difflib, Levenshtein, distance
 import re
 import string
 import pprint
+import json
 from collections import Counter
 
 import os.path
 
-def readCsvAsListOfDictionaries(fName):
-    df = pd.read_csv(fName, error_bad_lines=False)
+def readCsvAsListOfDictionaries(fName, separator):
+    df = pd.read_csv(fName, error_bad_lines=False, sep=separator)
     return df.to_dict('records')
 
+
+#global vars
 settings = []
 with open('settings.json') as data_file:
     settings = json.load(data_file)
 
 regex = re.compile('[%s]' % re.escape(string.punctuation))
 
-internalList = readCsvAsListOfDictionaries(settings["internalListPath"])
-externalList = readCsvAsListOfDictionaries(settings["externalListPath"])
+#load data
+internalList = readCsvAsListOfDictionaries(settings["internalListPath"], settings["internalListSeparator"])
+externalList = readCsvAsListOfDictionaries(settings["externalListPath"], settings["externalListSeparator"])
 
 
-
+#voting functions
 def majorityVoted(d):
     lst = [d["LevName"], d["DiffName"], d["SorName"], d["JacName"]]
     key, value = Counter(lst).most_common(1)[0]
@@ -53,7 +57,7 @@ def fuzzyVoted(d):
     return {"FuzyVotedName" : key, "FuzyVotedScore" : value}
 
 
-
+#write matching result to the output file
 def writeDicToFile(dic, fileName):
     fileExists = os.path.exists(fileName)
     with open(fileName, 'a+') as f:
@@ -63,11 +67,11 @@ def writeDicToFile(dic, fileName):
         w.writerow(dic)
 
 
-
+#preprocess token
 def cleanString(s):
     return regex.sub('', s).lower()
 
-
+#basic metrics function
 def calsulateDistances(st1, st2):
     diffl = difflib.SequenceMatcher(None, st1, st2).ratio()
     lev = Levenshtein.ratio(st1, st2)
@@ -81,45 +85,58 @@ def evaluateMatches():
     for internalProvider in internalList:
         baseName = internalProvider[settings["internalProviderNameColumn"]]
         baseState = internalProvider[settings["internalProviderStateColumn"]]
+        baseID = internalProvider[settings["internalProviderIDColumn"]]
 
         diffName = ""
         diffValue = 0
+        diffABA = ""
+
         levName = ""
         levValue = 0
+        levABA = ""
+
         sorName = ""
         sorValue = 0
+        sorABA = ""
+
         jacName = ""
         jacValue = 0
+        jacABA = ""
 
         for externalProvider in externalList:
             targetName = externalProvider[settings["externalProviderNameColumn"]]
             targetState = externalProvider[settings["externalProviderStateColumn"]]
+            targetID = externalProvider[settings["externalProviderIDColumn"]]
 
             diff, lev, sor, jac = calsulateDistances(cleanString(baseName), cleanString(targetName))
 
             if diff > diffValue:
                 diffValue = diff
                 diffName = targetName
+                diffABA = targetID
+
             if lev > levValue:
                 levValue = lev
                 levName = targetName
+                levABA = targetID
 
             if sor > sorValue:
                 sorValue = sor
                 sorName = targetName
+                sorABA = targetID
 
             if jac > jacValue:
                 jacValue = jac
                 jacName = targetName
+                jacABA = targetID
 
 
-        summaryDic = dict(zip(('BaseName', 'DiffName', 'DiffValue', 'LevName','LevValue','SorName','SorValue','JacName','JacValue'), (baseName,diffName,diffValue,levName,levValue,sorName, sorValue, jacName, jacValue)))
+        summaryDic = dict(zip(('BaseID', 'BaseName', 'DiffABA', 'DiffName', 'DiffValue', 'LevABA', 'LevName','LevValue','SorABA','SorName','SorValue','JacABA','JacName','JacValue'), (baseID, baseName, diffABA, diffName,diffValue,levABA, levName,levValue,sorABA, sorName, sorValue, jacABA, jacName, jacValue)))
 
         summaryDic.update(fuzzyVoted(summaryDic))
         summaryDic["MajorityVoted"] = majorityVoted(summaryDic)
         pprint.pprint(summaryDic)
         writeDicToFile(summaryDic, settings["outputFileName"])
 
-
-
+#run from here
 evaluateMatches()
