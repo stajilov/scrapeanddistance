@@ -14,13 +14,18 @@ def readCsvAsListOfDictionaries(fName, separator):
     return df.to_dict('records')
 
 def getMatchedSetFromFile(fileName):
-	return set(line.strip() for line in open(fileName, 'r'))
+    try:
+        fp = open(fileName, 'r')
+        return set(line.strip() for line in fp)
+    except IOError:
+        fp = open(fileName, 'w+')
+        return set()
 
-def writeMatchIDToFile(id, fileName):
-	f = open(fileName, 'a+')
-	f.write(id + '\n')
-	f.close()
 
+def writeMatchIDToFile(ident, fileName):
+	#f = open(fileName, 'a+')
+    with open(fileName, 'a') as f:
+        f.write(str(ident) + '\n')
 
 #global vars
 settings = []
@@ -32,7 +37,7 @@ regex = re.compile('[%s]' % re.escape(string.punctuation))
 #load data
 internalList = readCsvAsListOfDictionaries(settings["internalListPath"], settings["internalListSeparator"])
 externalList = readCsvAsListOfDictionaries(settings["externalListPath"], settings["externalListSeparator"])
-matchedIDs = getMatchedSetFromFile[settings["matchedFileName"]]
+matchedIDs = getMatchedSetFromFile(settings["matchedFileName"])
 
 #voting functions
 def majorityVoted(d):
@@ -48,26 +53,20 @@ def fuzzyVoted(d):
 
 
     subDictionary = {key:d[key] for key in fieldNames}
-    print("subDictionary" , subDictionary)
     uniqueCounts = dict(Counter(subDictionary.values()).most_common())
-    print("uniqueCounts", uniqueCounts)
+
     uniqueScores = {}
     uniqueIDs = {}
 
     for v in uniqueCounts.keys():
         for key, value in d.items():
-            print("Checking key", key)
-            print("Checking value", value)
+
             if value == v and not key == "BaseName" :
-                print("value from unique counts", v)
-                print("value from dictionary against which we're checking", value)
                 if uniqueScores.get(v) == None:
                     uniqueScores[v] = 0
-                print("checking key..", key)
                 uniqueScores[v] += d[mappingValues[key]]
                 uniqueIDs[v] = d[mappingIDs[key]]
-    #pprint.pprint(uniqueCounts)
-    #pprint.pprint(uniqueScores)
+
     resultDic = {k: uniqueScores[k] / uniqueCounts[k] for k in uniqueCounts if k in uniqueScores}
     resKey, resValue = Counter(resultDic).most_common(1)[0]
 
@@ -104,8 +103,8 @@ def evaluateMatches():
         baseState = internalProvider[settings["internalProviderStateColumn"]]
         baseID = internalProvider[settings["internalProviderIDColumn"]]
 
-        if baseID in matchedIDs:
-            print("Has a match")
+        if str(baseID) in matchedIDs:
+            print("Skipping...Has a match...")
             continue
 
         diffName = ""
