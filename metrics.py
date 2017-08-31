@@ -13,6 +13,14 @@ def readCsvAsListOfDictionaries(fName, separator):
     df = pd.read_csv(fName, error_bad_lines=False, sep=separator)
     return df.to_dict('records')
 
+def getMatchedSetFromFile(fileName):
+	return set(line.strip() for line in open(fileName, 'r'))
+
+def writeMatchIDToFile(id, fileName):
+	f = open(fileName, 'a+')
+	f.write(id + '\n')
+	f.close()
+
 
 #global vars
 settings = []
@@ -24,7 +32,7 @@ regex = re.compile('[%s]' % re.escape(string.punctuation))
 #load data
 internalList = readCsvAsListOfDictionaries(settings["internalListPath"], settings["internalListSeparator"])
 externalList = readCsvAsListOfDictionaries(settings["externalListPath"], settings["externalListSeparator"])
-
+matchedIDs = getMatchedSetFromFile[settings["matchedFileName"]]
 
 #voting functions
 def majorityVoted(d):
@@ -35,26 +43,35 @@ def majorityVoted(d):
 def fuzzyVoted(d):
 
     fieldNames = ["LevName", "DiffName", "SorName", "JacName"]
-    mapping = {"LevName": "LevValue", "DiffName": "DiffValue", "SorName":"SorValue", "JacName":"JacValue"}
+    mappingValues = {"LevName": "LevValue", "DiffName": "DiffValue", "SorName":"SorValue", "JacName":"JacValue"}
+    mappingIDs = {"LevName": "LevABA", "DiffName": "DiffABA", "SorName":"SorABA", "JacName":"JacABA"}
 
 
     subDictionary = {key:d[key] for key in fieldNames}
+    print("subDictionary" , subDictionary)
     uniqueCounts = dict(Counter(subDictionary.values()).most_common())
+    print("uniqueCounts", uniqueCounts)
     uniqueScores = {}
+    uniqueIDs = {}
 
     for v in uniqueCounts.keys():
         for key, value in d.items():
-            if value == v:
+            print("Checking key", key)
+            print("Checking value", value)
+            if value == v and not key == "BaseName" :
+                print("value from unique counts", v)
+                print("value from dictionary against which we're checking", value)
                 if uniqueScores.get(v) == None:
                     uniqueScores[v] = 0
-                uniqueScores[v] += d[mapping[key]]
-    pprint.pprint(uniqueCounts)
-    pprint.pprint(uniqueScores)
+                print("checking key..", key)
+                uniqueScores[v] += d[mappingValues[key]]
+                uniqueIDs[v] = d[mappingIDs[key]]
+    #pprint.pprint(uniqueCounts)
+    #pprint.pprint(uniqueScores)
     resultDic = {k: uniqueScores[k] / uniqueCounts[k] for k in uniqueCounts if k in uniqueScores}
-    key, value = Counter(resultDic).most_common(1)[0]
-    #print(key, value)
+    resKey, resValue = Counter(resultDic).most_common(1)[0]
 
-    return {"FuzyVotedName" : key, "FuzyVotedScore" : value}
+    return {"FuzyVotedName" : resKey, "FuzyVotedScore" : resValue, "FuzzyVotedABA" : uniqueIDs[resKey]}
 
 
 #write matching result to the output file
@@ -86,6 +103,10 @@ def evaluateMatches():
         baseName = internalProvider[settings["internalProviderNameColumn"]]
         baseState = internalProvider[settings["internalProviderStateColumn"]]
         baseID = internalProvider[settings["internalProviderIDColumn"]]
+
+        if baseID in matchedIDs:
+            print("Has a match")
+            continue
 
         diffName = ""
         diffValue = 0
@@ -137,6 +158,7 @@ def evaluateMatches():
         summaryDic["MajorityVoted"] = majorityVoted(summaryDic)
         pprint.pprint(summaryDic)
         writeDicToFile(summaryDic, settings["outputFileName"])
+        writeMatchIDToFile(baseID, settings["matchedFileName"])
 
 #run from here
 evaluateMatches()
