@@ -42,8 +42,18 @@ matchedIDs = getMatchedSetFromFile(settings["matchedFileName"])
 #voting functions
 def majorityVoted(d):
     lst = [d["LevName"], d["DiffName"], d["SorName"], d["JacName"]]
-    key, value = Counter(lst).most_common(1)[0]
-    return key
+
+    mappingIDs = {"LevName": "LevABA", "DiffName": "DiffABA", "SorName":"SorABA", "JacName":"JacABA"}
+    mostCommonID = 0
+    fieldNames = ["BaseID","BaseName","DiffABA","DiffName","DiffValue","LevABA","LevName","LevValue","SorABA","SorName","SorValue","JacABA","JacName","JacValue"]
+    subDictionary = {key:d[key] for key in fieldNames}
+
+    mostCommonName, mostCommonScore = Counter(lst).most_common(1)[0]
+    for key, value in d.subDictionary():
+        if value == mostCommonName and not key == "BaseName":
+            mostCommonID = d[mappingIDs[key]]
+
+    return {"MajorityVotedName" : mostCommonName, "MajorityVotedABA" : mostCommonID}
 
 def fuzzyVoted(d):
 
@@ -154,7 +164,7 @@ def evaluateMatches():
         summaryDic = dict(zip(('BaseID', 'BaseName', 'DiffABA', 'DiffName', 'DiffValue', 'LevABA', 'LevName','LevValue','SorABA','SorName','SorValue','JacABA','JacName','JacValue'), (baseID, baseName, diffABA, diffName,diffValue,levABA, levName,levValue,sorABA, sorName, sorValue, jacABA, jacName, jacValue)))
 
         summaryDic.update(fuzzyVoted(summaryDic))
-        summaryDic["MajorityVoted"] = majorityVoted(summaryDic)
+        summaryDic.update(majorityVoted(summaryDic))
         pprint.pprint(summaryDic)
         writeDicToFile(summaryDic, settings["outputFileName"])
         writeMatchIDToFile(baseID, settings["matchedFileName"])
